@@ -127,8 +127,10 @@ class BuilderAliasProviderTest extends TestCase
 
     /**
      * @group legacy
+     * @expectedException \InvalidArgumentException
+     * @expectedExceptionMessage Class "Bar\Menu\Builder" does not exist for menu builder "FooBundle:Builder"
      */
-    public function testBundleInheritanceParent()
+    public function testBundleInheritanceIgnoreParentBuilder()
     {
         if (!method_exists(BundleInterface::class, 'getParent')) {
             $this->markTestSkipped('Bundle inheritance does not exist in this Symfony version.');
@@ -137,10 +139,6 @@ class BuilderAliasProviderTest extends TestCase
         $item = $this->getMockBuilder('Knp\Menu\ItemInterface')->getMock();
         // mock the factory to return a set value when the builder creates the menu
         $factory = $this->getMockBuilder('Knp\Menu\FactoryInterface')->getMock();
-        $factory->expects($this->once())
-            ->method('createItem')
-            ->with('Main menu')
-            ->will($this->returnValue($item));
 
         $provider = new BuilderAliasProvider(
             $this->createTestKernel(),
@@ -182,9 +180,9 @@ class BuilderAliasProviderTest extends TestCase
     }
 
     /**
-     * @expectedException \InvalidArgumentException
-     * @expectedExceptionMessage Unable to find menu builder "FooBundle:Fake" in bundles BarBundle, FooBundle.
      * @group legacy
+     * @expectedException \InvalidArgumentException
+     * @expectedExceptionMessage Class "Bar\Menu\Fake" does not exist for menu builder "FooBundle:Fake"
      */
     public function testBundleInheritanceWrongClass()
     {
@@ -218,11 +216,11 @@ class BuilderAliasProviderTest extends TestCase
         ;
 
         $kernel = $this->getMockBuilder('Symfony\Component\HttpKernel\KernelInterface')->getMock();
+
         $kernel->expects($this->once())
             ->method('getBundle')
-            ->with('FooBundle', false)
-            ->will($this->returnValue([$bundle]))
-        ;
+            ->with('FooBundle')
+            ->will($this->returnValue($bundle));
 
         return $kernel;
     }

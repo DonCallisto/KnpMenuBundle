@@ -97,34 +97,12 @@ class BuilderAliasProvider implements MenuProviderInterface
         $name = sprintf('%s:%s', $bundleName, $className);
 
         if (!isset($this->builders[$name])) {
-            $class = null;
-            $logs = [];
-            $bundles = [];
-
-            $allBundles = $this->kernel->getBundle($bundleName, false);
-
-            // In Symfony 4, bundle inheritance is gone, so there is no way to get an array anymore.
-            if (!is_array($allBundles)) {
-                $allBundles = [$allBundles];
-            }
-
-            foreach ($allBundles as  $bundle) {
-                $try = $bundle->getNamespace().'\\Menu\\'.$className;
-                if (class_exists($try)) {
-                    $class = $try;
-                    break;
-                }
-
-                $logs[] = sprintf('Class "%s" does not exist for menu builder "%s".', $try, $name);
-                $bundles[] = $bundle->getName();
-            }
-
-            if (null === $class) {
-                if (1 === count($logs)) {
-                    throw new \InvalidArgumentException($logs[0]);
-                }
-
-                throw new \InvalidArgumentException(sprintf('Unable to find menu builder "%s" in bundles %s.', $name, implode(', ', $bundles)));
+            $bundle = $this->kernel->getBundle($bundleName);
+            $class = sprintf('%s\Menu\%s', $bundle->getNamespace(), $className);
+            if (!class_exists($class)) {
+                throw new \InvalidArgumentException(
+                    sprintf('Class "%s" does not exist for menu builder "%s".', $class, $name)
+                );
             }
 
             $builder = new $class();
